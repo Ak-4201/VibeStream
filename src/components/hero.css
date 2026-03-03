@@ -12,8 +12,9 @@
   inset: 0;
   background-position: center;
   background-size: cover;
+  background-repeat: no-repeat;
   transform: scale(1.05);
-  filter: saturate(1.05) contrast(1.05);
+  filter: saturate(1.05) contrast(1.02);
 }
 
 .hero__vignette {

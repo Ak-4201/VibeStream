@@ -32,7 +32,7 @@ type OmdbSearchResponse =
 // In dev we use a Vite proxy to avoid CORS; in production use OMDb directly (HTTPS).
 const OMDB_BASE_URL =
   import.meta.env.DEV ? '/api/omdb' : 'https://www.omdbapi.com/'
-const OMDB_API_KEY = import.meta.env.VITE_OMDB_API_KEY ?? 'e7dc754e'
+const OMDB_API_KEY = import.meta.env.VITE_OMDB_API_KEY ?? 'eb4d8b05'
 
 function toUrl(params: Record<string, string>): string {
   const url = OMDB_BASE_URL.startsWith('http')
@@ -73,5 +73,26 @@ export async function getMovieById(imdbID: string, signal?: AbortSignal) {
   const data = await fetchJson<OmdbMovieFull>(url, { signal })
   if ((data as any).Response === 'False') return null
   return data
+}
+
+/**
+ * Converts an OMDB/IMDb poster URL to a higher-resolution version for hero/backdrop use.
+ * Amazon CDN URLs use size tokens like _V1_SX300 (300px); we strip or replace for HD.
+ */
+export function getHighResPosterUrl(posterUrl: string | undefined): string {
+  if (!posterUrl || posterUrl === 'N/A') return ''
+  const trimmed = posterUrl.trim()
+  // Strip ._V1_SX300 (or similar) to request full resolution: ...@._V1_XXX.jpg -> ...@.jpg
+  const fullResMatch = trimmed.match(/^(.+@)\._V1_[^.]+(\.[a-zA-Z]+)(\?.*)?$/)
+  if (fullResMatch) {
+    const base = fullResMatch[1]
+    const ext = fullResMatch[2]
+    const query = fullResMatch[3] ?? ''
+    return `${base}${ext}${query}`
+  }
+  // Otherwise try requesting a larger size: _SX300 -> _SY1000 (tall) for hero
+  if (trimmed.includes('_SX300')) return trimmed.replace('_SX300', '_SY1000')
+  if (trimmed.includes('_SX500')) return trimmed.replace('_SX500', '_SY1000')
+  return trimmed
 }
 

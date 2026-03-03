@@ -5,8 +5,8 @@ export function Navbar() {
     <header className="nav">
       <div className="nav__inner">
         <div className="nav__left">
-          <div className="nav__logo" aria-label="Kodflix">
-            KODFLIX
+          <div className="nav__logo" aria-label="VibeStream">
+            VIBESTREAM
           </div>
           <nav className="nav__links" aria-label="Primary">
             <a className="nav__link nav__link--active" href="#">

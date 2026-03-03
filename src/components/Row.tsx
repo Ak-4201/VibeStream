@@ -1,21 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
-import type { TmdbMovieLite } from '../lib/tmdb'
-import { discoverMovies, getTrendingMovies } from '../lib/tmdb'
+import type { OmdbMovieLite } from '../lib/omdb'
+import { searchMovies } from '../lib/omdb'
 import { PosterCard } from './PosterCard'
 import './row.css'
 
-export type RowFetchType =
-  | { type: 'trending'; timeWindow?: 'day' | 'week' }
-  | { type: 'discover'; sortBy?: string; withGenres?: number; year?: number; voteCountGte?: number }
-
 type RowProps = {
   title: string
-  fetchConfig: RowFetchType
+  searchQuery: string
   variant?: 'poster' | 'backdrop'
 }
 
-export function Row({ title, fetchConfig, variant = 'poster' }: RowProps) {
-  const [items, setItems] = useState<TmdbMovieLite[]>([])
+export function Row({ title, searchQuery, variant = 'poster' }: RowProps) {
+  const [items, setItems] = useState<OmdbMovieLite[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const scrollerRef = useRef<HTMLDivElement | null>(null)
@@ -23,42 +19,22 @@ export function Row({ title, fetchConfig, variant = 'poster' }: RowProps) {
   useEffect(() => {
     const controller = new AbortController()
     async function load() {
+      if (!searchQuery.trim()) {
+        setItems([])
+        setLoading(false)
+        return
+      }
       setLoading(true)
       setError(null)
       try {
-        if (fetchConfig.type === 'trending') {
-          const [p1, p2] = await Promise.all([
-            getTrendingMovies(fetchConfig.timeWindow ?? 'day', 1, controller.signal),
-            getTrendingMovies(fetchConfig.timeWindow ?? 'day', 2, controller.signal)
-          ])
-          const merged = [...(p1.items ?? []), ...(p2.items ?? [])]
-          const byId = new Map<number, TmdbMovieLite>()
-          for (const m of merged) byId.set(m.id, m)
-          setItems(Array.from(byId.values()).slice(0, 18))
-        } else {
-          const [p1, p2] = await Promise.all([
-            discoverMovies({
-              sort_by: fetchConfig.sortBy ?? 'popularity.desc',
-              page: 1,
-              with_genres: fetchConfig.withGenres,
-              primary_release_year: fetchConfig.year,
-              'vote_count.gte': fetchConfig.voteCountGte,
-              signal: controller.signal
-            }),
-            discoverMovies({
-              sort_by: fetchConfig.sortBy ?? 'popularity.desc',
-              page: 2,
-              with_genres: fetchConfig.withGenres,
-              primary_release_year: fetchConfig.year,
-              'vote_count.gte': fetchConfig.voteCountGte,
-              signal: controller.signal
-            })
-          ])
-          const merged = [...(p1.items ?? []), ...(p2.items ?? [])]
-          const byId = new Map<number, TmdbMovieLite>()
-          for (const m of merged) byId.set(m.id, m)
-          setItems(Array.from(byId.values()).slice(0, 18))
-        }
+        const [p1, p2] = await Promise.all([
+          searchMovies(searchQuery, 1, controller.signal),
+          searchMovies(searchQuery, 2, controller.signal)
+        ])
+        const merged = [...(p1.items ?? []), ...(p2.items ?? [])]
+        const byId = new Map<string, OmdbMovieLite>()
+        for (const m of merged) byId.set(m.imdbID, m)
+        setItems(Array.from(byId.values()).slice(0, 18))
       } catch (e) {
         if (controller.signal.aborted) return
         setError(e instanceof Error ? e.message : 'Failed to load row')
@@ -68,7 +44,7 @@ export function Row({ title, fetchConfig, variant = 'poster' }: RowProps) {
     }
     void load()
     return () => controller.abort()
-  }, [fetchConfig])
+  }, [searchQuery])
 
   function scrollByCards(direction: -1 | 1) {
     const el = scrollerRef.current
@@ -104,7 +80,7 @@ export function Row({ title, fetchConfig, variant = 'poster' }: RowProps) {
       ) : (
         <div className="row__scroller" ref={scrollerRef}>
           {items.map((it) => (
-            <PosterCard key={it.id} item={it} variant={variant} />
+            <PosterCard key={it.imdbID} item={it} variant={variant} />
           ))}
         </div>
       )}

@@ -6,10 +6,10 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/api/tmdb': {
-        target: 'https://api.themoviedb.org',
+      '/api/omdb': {
+        target: 'https://www.omdbapi.com',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/tmdb/, '/3'),
+        rewrite: (path) => path.replace(/^\/api\/omdb/, ''),
         secure: true
       }
     }

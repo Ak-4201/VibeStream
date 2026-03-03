@@ -1,32 +1,25 @@
 import { useEffect, useState } from 'react'
-import type { TmdbMovieLite } from './lib/tmdb'
-import { discoverMovies, getImageUrl, getMovieDetails } from './lib/tmdb'
+import { getMovieById, getHighResPosterUrl } from './lib/omdb'
+import type { OmdbMovieFull } from './lib/omdb'
 import { Navbar } from './components/Navbar'
 import { Hero } from './components/Hero'
 import { Row } from './components/Row'
-import type { RowFetchType } from './components/Row'
 import './styles/app.css'
 
-type RowConfig = {
-  title: string
-  fetchConfig: RowFetchType
-  variant?: 'poster' | 'backdrop'
-}
+const FEATURED_IMDB_ID = 'tt3896198' // Guardians of the Galaxy Vol. 2
 
-const ROWS: RowConfig[] = [
-  { title: 'Trending Now', fetchConfig: { type: 'trending', timeWindow: 'day' }, variant: 'backdrop' },
-  { title: 'Popular on Kodflix', fetchConfig: { type: 'discover', sortBy: 'popularity.desc' } },
-  { title: 'Top Rated', fetchConfig: { type: 'discover', sortBy: 'vote_average.desc', voteCountGte: 1000 } },
-  { title: 'Action Movies', fetchConfig: { type: 'discover', sortBy: 'popularity.desc', withGenres: 28 } },
-  { title: 'Comedy', fetchConfig: { type: 'discover', sortBy: 'popularity.desc', withGenres: 35 } },
-  { title: 'Drama', fetchConfig: { type: 'discover', sortBy: 'popularity.desc', withGenres: 18 } },
-  { title: 'Horror', fetchConfig: { type: 'discover', sortBy: 'popularity.desc', withGenres: 27 } },
-  { title: 'New Releases', fetchConfig: { type: 'discover', sortBy: 'primary_release_date.desc', year: new Date().getFullYear() }, variant: 'backdrop' }
+const ROWS: { title: string; searchQuery: string; variant?: 'poster' | 'backdrop' }[] = [
+  { title: 'Trending Now', searchQuery: 'avengers', variant: 'backdrop' },
+  { title: 'Popular on VibeStream', searchQuery: 'marvel' },
+  { title: 'Action', searchQuery: 'action' },
+  { title: 'Comedy', searchQuery: 'comedy' },
+  { title: 'Drama', searchQuery: 'drama' },
+  { title: 'Horror', searchQuery: 'horror' },
+  { title: 'Sci-Fi', searchQuery: 'sci-fi', variant: 'backdrop' }
 ]
 
 export default function App() {
-  const [hero, setHero] = useState<TmdbMovieLite | null>(null)
-  const [heroPlot, setHeroPlot] = useState<string | null>(null)
+  const [hero, setHero] = useState<OmdbMovieFull | null>(null)
   const [heroLoading, setHeroLoading] = useState(true)
   const [heroError, setHeroError] = useState<string | null>(null)
 
@@ -36,14 +29,10 @@ export default function App() {
       setHeroLoading(true)
       setHeroError(null)
       try {
-        const { items } = await discoverMovies({ sort_by: 'popularity.desc', page: 1 })
-        const pick = items.find((m) => m.backdrop_path) ?? items[0]
-        if (!pick) throw new Error(items.length === 0 ? 'No results' : 'No backdrop for featured title')
-
-        const full = await getMovieDetails(pick.id)
+        const full = await getMovieById(FEATURED_IMDB_ID)
         if (cancelled) return
-        setHero(pick)
-        setHeroPlot(full?.overview ?? pick.overview ?? null)
+        if (!full) throw new Error('Featured title not found')
+        setHero(full)
       } catch (e) {
         if (cancelled) return
         setHeroError(e instanceof Error ? e.message : 'Failed to load hero')
@@ -57,11 +46,12 @@ export default function App() {
     }
   }, [])
 
-  const heroTitle = hero?.title ?? ''
+  const heroTitle = hero?.Title ?? ''
   const heroSubtitle = hero
-    ? `${new Date(hero.release_date).getFullYear()}${hero.vote_average ? ` • ${Math.round(hero.vote_average * 10)}% Match` : ''}`
+    ? `${hero.Year ?? ''}${hero.Rated && hero.Rated !== 'N/A' ? ` • ${hero.Rated}` : ''}${hero.imdbRating ? ` • ${hero.imdbRating}/10` : ''}`
     : ''
-  const heroBackdrop = hero?.backdrop_path ? getImageUrl(hero.backdrop_path, 'w1280') : ''
+  const heroPlot = hero?.Plot ?? ''
+  const heroBackdropPosterUrl = getHighResPosterUrl(hero?.Poster)
 
   return (
     <div className="app">
@@ -73,8 +63,8 @@ export default function App() {
           error={heroError}
           title={heroTitle}
           subtitle={heroSubtitle}
-          plot={heroPlot ?? ''}
-          backdropPosterUrl={heroBackdrop}
+          plot={heroPlot}
+          backdropPosterUrl={heroBackdropPosterUrl}
         />
 
         <section className="rows" aria-label="Movie rows">
@@ -82,7 +72,7 @@ export default function App() {
             <Row
               key={row.title}
               title={row.title}
-              fetchConfig={row.fetchConfig}
+              searchQuery={row.searchQuery}
               variant={row.variant ?? 'poster'}
             />
           ))}
