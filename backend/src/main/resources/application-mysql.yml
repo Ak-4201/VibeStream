@@ -1,0 +1,6 @@
+# Use with: spring.profiles.active=mysql (and set SPRING_DATASOURCE_URL, etc.)
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.MySQLDialect

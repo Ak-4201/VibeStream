@@ -1,8 +1,10 @@
-# Kodflix (Netflix-style movie landing)
+# Kodflix (Netflix-style movie app with auth)
 
-Netflix-inspired landing page UI built with **React + Vite** that fetches movie data from **OMDb** (the API key you provided is for OMDb).
+Netflix-inspired landing page built with **React + Vite** (OMDb for movies) and **Spring Boot** (auth). After sign-in, the dashboard shows the same movie content as [vibe-stream-seven.vercel.app](https://vibe-stream-seven.vercel.app).
 
-## Setup
+## Frontend (React)
+
+### Setup
 
 1. Install dependencies:
 
@@ -10,18 +12,39 @@ Netflix-inspired landing page UI built with **React + Vite** that fetches movie 
 npm install
 ```
 
-2. (Optional) Configure an API key via env var (defaults to the key you provided):
+2. Optional: create a `.env` file (see `.env.example`):
 
-Create a `.env` file:
-
-```bash
-VITE_OMDB_API_KEY=e7dc754e
-```
+- `VITE_OMDB_API_KEY` – OMDb API key (default provided).
+- `VITE_AUTH_API_URL` – Backend auth API URL (default: `http://localhost:8080`).
 
 3. Run the app:
 
 ```bash
 npm run dev
+```
+
+### Auth flows
+
+- **Sign In** (`/login`): username or email + password. “New to Kodflix? Sign up now.” links to signup.
+- **Sign Up** (`/signup`): User ID, user name, email, phone, create password, confirm password. Client-side validation (email format, min 8-char password, matching passwords). On success, JWT is stored in `localStorage` and user is redirected to the home (movie) dashboard.
+- **Protected routes**: `/` (movie browsing) requires login; unauthenticated users are redirected to `/login`.
+- **Navbar**: When logged out, “Sign In” and “Sign Up” on the top right. When logged in, username, avatar, and “Sign out”.
+
+## Backend (Spring Boot + Aiven MySQL)
+
+See **[backend/README.md](backend/README.md)** for:
+
+- Aiven MySQL connection (add your backend/server IP to the service **allowlist** in Aiven console).
+- Env vars: `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`, `JWT_SECRET`.
+- Endpoints: `POST /api/auth/signup`, `POST /api/auth/login`, `GET /api/auth/me` (JWT in `Authorization: Bearer <token>`).
+- Passwords stored as **BCrypt** hashes; duplicate emails prevented; role `ROLE_USER`; CORS configured for the frontend origin.
+
+Quick run (from project root):
+
+```bash
+cd backend
+# Set env vars (Aiven URL, password, JWT_SECRET), then:
+./mvnw spring-boot:run
 ```
 
 ## Tests
@@ -30,13 +53,8 @@ npm run dev
 npm run test:run
 ```
 
-## Verify it’s fetching and looks like Netflix
+## Verify
 
-- **Data fetch**: open DevTools → Network → filter `omdbapi` and you should see requests like `?s=...&apikey=...` and `?i=...&plot=full&apikey=...`.
-- **Appearance**: you should see a sticky top bar, a large hero banner with dark vignette, and multiple horizontal carousels with hover-zoom cards.
-
-## Notes
-
-- The UI layout is modeled after the Netflix landing style (hero banner + horizontal rows + hover scale).
-- OMDb provides search-based lists; “Trending / New” rows are implemented as curated search queries.
+- **Movies**: DevTools → Network → filter `omdbapi` for movie requests.
+- **Auth**: Sign up, then sign in; navbar shows username and Sign out; visiting `/` shows the movie dashboard.
 

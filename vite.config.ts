@@ -11,6 +11,10 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/omdb/, ''),
         secure: true
+      },
+      '/api/auth': {
+        target: 'http://localhost:8080',
+        changeOrigin: true
       }
     }
   },

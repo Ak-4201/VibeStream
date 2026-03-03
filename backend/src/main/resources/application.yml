@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: kodflix-auth
+  datasource:
+    # Default: H2 in-memory so signup works without Aiven. For Aiven: set SPRING_DATASOURCE_URL and use profile mysql.
+    url: ${SPRING_DATASOURCE_URL:jdbc:h2:mem:authdb}
+    username: ${SPRING_DATASOURCE_USERNAME:sa}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+    driver-class-name: ${SPRING_DRIVER_CLASS:org.h2.Driver}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+    database-platform: ${SPRING_JPA_DIALECT:org.hibernate.dialect.H2Dialect}
+
+server:
+  port: ${SERVER_PORT:8080}
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:your-256-bit-secret-key-change-in-production-must-be-long-enough}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}
