@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { AuthBackground } from '../components/AuthBackground'
 import { useAuth } from '../context/AuthContext'
 import { login } from '../lib/authApi'
@@ -7,7 +7,9 @@ import './auth.css'
 
 export function SignIn() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { loginSuccess } = useAuth()
+  const fromSignUp = (location.state as { fromSignUp?: boolean } | null)?.fromSignUp ?? false
   const [usernameOrEmail, setUsernameOrEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -45,6 +47,7 @@ export function SignIn() {
       <div className="auth-card">
         <h1 className="auth-title">Sign In</h1>
         <form className="auth-form" onSubmit={handleSubmit}>
+          {fromSignUp && <div className="auth-success" role="status">Account created. Please sign in.</div>}
           {error && <div className="auth-error" role="alert">{error}</div>}
           <input
             type="text"

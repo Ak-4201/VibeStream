@@ -10,10 +10,10 @@
 .hero__bg {
   position: absolute;
   inset: 0;
-  background-position: center;
+  background-position: right center;
   background-size: cover;
   background-repeat: no-repeat;
-  transform: scale(1.05);
+  transform: none;
   filter: saturate(1.05) contrast(1.02);
 }
 

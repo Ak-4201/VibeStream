@@ -69,9 +69,11 @@ export async function signUp(payload: SignUpPayload): Promise<AuthResponse> {
   if (!res!.ok) {
     const msg =
       (data.error ?? data.message ?? Object.values(data).flat().join(' ')) ||
-      (res!.status === 500
-        ? 'Sign up failed. Ensure the backend is running and, if using Aiven, the database is reachable.'
-        : `Sign up failed (${res!.status})`)
+      (res!.status === 403
+        ? 'Access denied (403). Restart the backend so it allows this app origin.'
+        : res!.status === 500
+          ? 'Sign up failed. Ensure the backend is running and, if using Aiven, the database is reachable.'
+          : `Sign up failed (${res!.status})`)
     throw new Error(typeof msg === 'string' ? msg : msg[0] ?? 'Sign up failed')
   }
   return data as AuthResponse

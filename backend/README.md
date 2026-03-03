@@ -14,26 +14,27 @@ mvn spring-boot:run
 
 Or with Maven wrapper: `./mvnw spring-boot:run` (Windows: `mvnw.cmd spring-boot:run`)
 
-## Using Aiven MySQL
+## Using Aiven MySQL (Option A – recommended)
 
-1. In [Aiven Console](https://console.aiven.io/), copy the **Service URI** (Host, Port) from the connection info.
-2. **Allowlist**: Add your backend server’s (and dev machine’s) IP in the service allowlist.
-3. Set env vars and run with profile `mysql`:
+The project is configured for **streamweb-vibestream.d.aivencloud.com:12071/defaultdb** (user: `avnadmin`).
 
-| Variable | Description |
-|----------|-------------|
-| `SPRING_DATASOURCE_URL` | `jdbc:mysql://HOST:PORT/defaultdb?sslMode=REQUIRED` |
-| `SPRING_DATASOURCE_USERNAME` | e.g. `avnadmin` |
-| `SPRING_DATASOURCE_PASSWORD` | Service password |
-| `JWT_SECRET` | Min 32 chars for HS256 |
-| `SERVER_PORT` | Optional; default `8080` |
+1. **Allowlist**: In Aiven Console, add your machine’s (or server’s) IP to the service allowlist.
+2. From the **backend** folder, run the PowerShell script (sets env vars and starts the app):
 
-```bash
-export SPRING_DATASOURCE_URL="jdbc:mysql://YOUR_HOST:YOUR_PORT/defaultdb?sslMode=REQUIRED"
-export SPRING_DATASOURCE_USERNAME=avnadmin
-export SPRING_DATASOURCE_PASSWORD=your_password
-export JWT_SECRET=your-256-bit-secret-key-at-least-32-characters-long
-mvn spring-boot:run -Dspring.profiles.active=mysql
+```powershell
+cd backend
+.\run-with-mysql.ps1
+```
+
+The script sets `SPRING_PROFILES_ACTIVE=mysql` and `SPRING_DATASOURCE_PASSWORD` and runs `mvn spring-boot:run`.
+
+**Or set env vars yourself and run:**
+
+```powershell
+cd backend
+$env:SPRING_PROFILES_ACTIVE = "mysql"
+$env:SPRING_DATASOURCE_PASSWORD = "your-aiven-password"   # From Aiven Console → service → Connection info
+mvn spring-boot:run
 ```
 
 ## Requirements

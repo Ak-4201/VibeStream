@@ -8,7 +8,6 @@
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>3.2.5</version>
         <relativePath/>
-        <scope>import</scope>
     </parent>
     <groupId>com.kodflix</groupId>
     <artifactId>kodflix-auth</artifactId>

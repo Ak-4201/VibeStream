@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { AuthBackground } from '../components/AuthBackground'
-import { useAuth } from '../context/AuthContext'
 import { signUp } from '../lib/authApi'
 import './auth.css'
 
@@ -10,7 +9,6 @@ const MIN_PASSWORD = 8
 
 export function SignUp() {
   const navigate = useNavigate()
-  const { loginSuccess } = useAuth()
   const [userId, setUserId] = useState('')
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
@@ -39,7 +37,7 @@ export function SignUp() {
     setSubmitting(true)
     setErrors({})
     try {
-      const res = await signUp({
+      await signUp({
         userId: userId.trim(),
         username: username.trim(),
         email: email.trim().toLowerCase(),
@@ -47,8 +45,7 @@ export function SignUp() {
         password,
         confirmPassword
       })
-      loginSuccess(res.token, res.user)
-      navigate('/', { replace: true })
+      navigate('/login', { replace: true, state: { fromSignUp: true } })
     } catch (err) {
       setErrors({ form: err instanceof Error ? err.message : 'Sign up failed.' })
     } finally {
