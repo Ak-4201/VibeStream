@@ -1,4 +1,4 @@
-# Kodflix (Netflix-style movie app with auth)
+# VibeStream (Netflix-style movie app with auth)
 
 Netflix-inspired landing page built with **React + Vite** (OMDb for movies) and **Spring Boot** (auth). After sign-in, the dashboard shows the same movie content as [vibe-stream-seven.vercel.app](https://vibe-stream-seven.vercel.app).
 
